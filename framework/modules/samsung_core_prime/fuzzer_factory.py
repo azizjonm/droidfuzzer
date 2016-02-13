@@ -11,7 +11,7 @@ class FuzzerFactory:
 
     @staticmethod
     def get_fuzzer(f):
-        if f == FuzzerFactoryEnum.document_viewer.value:
+        if f == FuzzerFactoryEnum.document_viewer:
             return DocumentViewerFuzzer()
 
 

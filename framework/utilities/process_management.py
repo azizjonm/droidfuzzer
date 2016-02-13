@@ -7,6 +7,11 @@ class ProcessManagement(object):
 
     @staticmethod
     def kill(p):
+        """
+        Kill all processes within process group
+        :param p
+        :return:
+        """
         for process in p:
             try:
                 parent = psutil.Process(process.pid)
@@ -21,6 +26,10 @@ class ProcessManagement(object):
 
     @staticmethod
     def clear():
+        """
+        Clear logcat logs
+        :return:
+        """
         p = Popen("".join([getcwd(), "/bin/adb logcat -c"]), shell=True)
         psutil.Process(p.pid).kill()
 

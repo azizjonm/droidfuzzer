@@ -1,9 +1,14 @@
 from framework.commands.cmd import Run
+from framework.utilities.logging.global_logger import GlobalLogger
 from blessings import Terminal
 import sys
 t = Terminal()
 
+
 if __name__ == "__main__":
+
+    # Create GlobalLogger instance
+    logger = GlobalLogger.get_logger()
 
     print(t.yellow("""
 

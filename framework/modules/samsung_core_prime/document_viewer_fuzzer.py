@@ -1,6 +1,11 @@
-from blessings import Terminal
-from datetime import datetime
+# Setup GlobalLogger
+try:
+    import logging
+    logger = logging.getLogger('DroidFuzzer')
+except ImportError as e:
+    raise e
 from os import listdir, getcwd
+from blessings import Terminal
 from subprocess import Popen, PIPE, CalledProcessError
 from framework.utilities.process_management import ProcessManagement
 import time
@@ -13,7 +18,11 @@ class DocumentViewerFuzzer(object):
 
     @staticmethod
     def run():
-        print(t.yellow("[{0}] Starting fuzzer (!)".format(datetime.now())))
+        """
+        Run target fuzzer
+        :return:
+        """
+        logger.debug("Starting Samsung Core Prime Document Viewer Fuzzer (!)")
 
         _test_cases = [
 
@@ -23,9 +32,9 @@ class DocumentViewerFuzzer(object):
         ]
 
         for test_case in _test_cases:
-            print(t.yellow("[{0}] Available test-case : ".format(datetime.now())) + test_case)
+            logger.debug("Available test-case : {0}".format(test_case))
         # Get target test-case
-        target = raw_input(t.yellow("[{0}] Select test-case : ".format(datetime.now())))
+        target = raw_input(t.yellow("(DroidFuzzer) Select test-case: "))
         # Clear logcat before running test-cases
         ProcessManagement.clear()
         processes = list()
@@ -33,7 +42,7 @@ class DocumentViewerFuzzer(object):
         for test_case in _test_cases:
             if target == test_case:
                 for item in listdir("".join([getcwd(), "/test-cases/{0}".format(target)])):
-                    print(t.yellow("[{0}] Fuzzing : ".format(datetime.now())) + item)
+                    logger.debug("Fuzzing : {0}".format(item))
                     try:
                         # Push the test-case to the device
                         # -----------------------------------------------------------------------------
