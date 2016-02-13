@@ -18,7 +18,7 @@ class Run(DroidFuzzer):
         DroidFuzzer.__init__(self)
 
     @staticmethod
-    def do_fuzzer(args):
+    def do_fuzzers(args):
         """
         Usage: fuzzer show
         Usage: fuzzer module <module>
@@ -26,8 +26,8 @@ class Run(DroidFuzzer):
         try:
             if len(args) < 2:
                 logger.error("Not enough arguments (!)")
-                logger.debug("Usage: fuzzer show")
-                logger.debug("Usage: fuzzer module <module>")
+                logger.debug("Usage: fuzzers show")
+                logger.debug("Usage: fuzzers module <module>")
                 return
             else:
                 if args.split()[0] == "show":
@@ -53,7 +53,7 @@ class Run(DroidFuzzer):
                             logger.debug("{0} (!) ".format(CommandEnum.module_does_not_exist))
                     else:
                         logger.error("Not enough arguments (!)")
-                        logger.error("Usage: fuzzer module <module>")
+                        logger.error("Usage: fuzzers module <module>")
         except ImportError:
             logger.error("Not able to import the FuzzerFactory")
         except IndexError:

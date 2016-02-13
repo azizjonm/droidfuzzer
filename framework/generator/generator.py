@@ -36,6 +36,7 @@ class Generator(object):
             except error:
                 raise
         try:
+            # TODO - Provide more control over radamsa usage
             Popen(
                 "".join([
                     getcwd(),
