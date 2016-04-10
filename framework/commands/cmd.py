@@ -14,6 +14,7 @@ t = Terminal()
 
 
 class Run(DroidFuzzer):
+
     def __int__(self):
         DroidFuzzer.__init__(self)
 
@@ -43,9 +44,9 @@ class Run(DroidFuzzer):
                                                                         "".join([module_name, " : ", fuzzer])))
                 elif args.split()[0] == "module":
                     if args.split()[1]:
-                        # Import about and create a new FuzzerFactory
-                        from framework.modules.samsung_core_prime.fuzzer_factory import FuzzerFactory
-                        _factory_fuzzer = FuzzerFactory.get_fuzzer(args.split()[1])
+                        # Create a new FuzzerFactory
+                        from framework.modules.fuzzerfactory import FuzzerFactory
+                        _factory_fuzzer = FuzzerFactory().get_fuzzer(args.split()[1])
                         if _factory_fuzzer:
                             logger.debug("Loading : {0}".format(_factory_fuzzer.tag))
                             _factory_fuzzer.run()
@@ -72,5 +73,4 @@ class Run(DroidFuzzer):
                 g.run()
         except IndexError:
             raise
-
 

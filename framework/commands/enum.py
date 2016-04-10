@@ -1,6 +1,6 @@
 class CommandEnum(object):
 
-    # command line enum types
+    # Command Line Enum Types
     # --------------------------------------------------
     config_file_path = "/framework/modules/modules.config"
     available_module = "Available modules"

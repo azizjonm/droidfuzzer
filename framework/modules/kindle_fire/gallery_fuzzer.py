@@ -12,10 +12,10 @@ import time
 t = Terminal()
 
 
-class DocumentViewerFuzzer(object):
+class GalleryFuzzer(object):
 
-    label = "samsung_core_prime_document_viewer_fuzzer"
-    tag = "Samsung Core Prime Document Viewer Fuzzer"
+    label = "kindle_fire_gallery_viewer_fuzzer"
+    tag = "Kindle Fire Gallery Fuzzer"
 
     @staticmethod
     def run():
@@ -23,20 +23,21 @@ class DocumentViewerFuzzer(object):
         Run target fuzzer
         :return:
         """
-        logger.debug("Starting Samsung Core Prime Document Viewer Fuzzer (!)")
+
+        logger.debug("Starting Kindle Fire Gallery Fuzzer (!)")
 
         _test_cases = [
 
-            "docx",
-            "doc",
-            "pdf"
+            "gif",
+            "png",
+            "mp4"
         ]
 
         for test_case in _test_cases:
             logger.debug("Available Test-Case : {0}".format(test_case))
         # Get target test-case
         target = raw_input(t.yellow("(DroidFuzzer) Select Test-Case: "))
-        # Clear logcat before running test-cases
+        # Clear logcat before running through available test-cases
         ProcessManagement.clear()
         processes = list()
 
@@ -55,9 +56,9 @@ class DocumentViewerFuzzer(object):
                         processes.append(pusher)
                         time.sleep(2)
                         viewer = Popen(
-                            "".join([getcwd(), "/bin/adb shell su '-c am start ",
-                                     "-n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity ",
-                                     "-d file:///data/local/tmp/{0}'".format(item)]),
+                            "".join([getcwd(), "/bin/adb shell am start ",
+                                     "-n com.amazon.photos/com.amazon.gallery.thor.app.activity.ThorViewActivity ",
+                                     "-d file:///data/local/tmp/{0}".format(item)]),
                             stdout=PIPE,
                             shell=True)
                         processes.append(viewer)
@@ -74,7 +75,7 @@ class DocumentViewerFuzzer(object):
                         # ----------------------------------------------------------------------------------------
                         fatal = Popen(
                             "".join([getcwd(), "/bin/adb logcat -v time *:F > ",
-                                               "logs/samsung_core_prime_document_viewer_{0}_logs".format(target)]),
+                                     "logs/kindle_fire_gallery_viewer_{0}_logs".format(target)]),
                             stdout=PIPE,
                             shell=True)
                         processes.append(fatal)
@@ -83,7 +84,7 @@ class DocumentViewerFuzzer(object):
                         # ----------------------------------------------------------------------------------------
                         logcat = Popen(
                             "".join([getcwd(), "/bin/adb logcat -v time *:F -s 'Filename' >> ",
-                                               "logs/samsung_core_prime_document_viewer_{0}_logs".format(target)]),
+                                     "logs/kindle_fire_gallery_viewer_{0}_logs".format(target)]),
                             stdout=PIPE,
                             shell=True)
                         processes.append(logcat)
@@ -91,7 +92,7 @@ class DocumentViewerFuzzer(object):
                         # Remove test-case from device
                         # ----------------------------------------------------------------------------------
                         remove = Popen(
-                            "".join([getcwd(), "/bin/adb shell su '-c rm /data/local/tmp/{0}'".format(item)]),
+                            "".join([getcwd(), "/bin/adb shell rm /data/local/tmp/{0}".format(item)]),
                             stdout=PIPE,
                             shell=True)
                         processes.append(remove)
@@ -99,13 +100,10 @@ class DocumentViewerFuzzer(object):
                         # Kill target application process
                         # ------------------------------------------------------------------------------
                         Popen(
-                            "".join([getcwd(), "/bin/adb shell am force-stop com.hancom.office.viewer"]),
+                            "".join([getcwd(), "/bin/adb shell am force-stop com.amazon.photos"]),
                             shell=True)
                         # Kill all adb processes
                         #
                         ProcessManagement.kill(processes)
                     except CalledProcessError as called_process_error:
                         raise called_process_error
-
-
-
