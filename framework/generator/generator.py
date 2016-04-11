@@ -27,7 +27,7 @@ class Generator(object):
 
         if path.exists("".join([getcwd(), "/test-cases/{0}".format(ext.strip("."))])):
             logger.debug("Extension already exists (!)")
-            logger.debug("Generating test-cases (!)")
+            logger.debug("Generating Test-Cases (!)")
         else:
             # Create a directory for the extension if it doesn't already exist
             logger.debug("Creating directory for the {0} extension (!)".format(ext))

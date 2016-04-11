@@ -56,7 +56,7 @@ class Run(DroidFuzzer):
                         logger.error("Not enough arguments (!)")
                         logger.error("Usage: fuzzers module <module>")
         except ImportError:
-            logger.error("Not able to import the FuzzerFactory")
+            logger.error("Not able to import the FuzzerFactory (!)")
         except IndexError:
             logger.error("Not enough arguments (!) ")
 
@@ -65,7 +65,7 @@ class Run(DroidFuzzer):
         try:
             if len(args) < 2:
                 logger.error("Not enough arguments (!)")
-                logger.debug("Usage: generator <file> <number_of_test_cases>")
+                logger.error("Usage: generator <file> <number_of_test_cases>")
                 return
             else:
                 from framework.generator.generator import Generator
@@ -73,4 +73,24 @@ class Run(DroidFuzzer):
                 g.run()
         except IndexError:
             raise
+
+    @staticmethod
+    def do_triage(args):
+        try:
+            if args.split()[0] == "logs":
+                from framework.triage.triage import Triage
+                triage = Triage()
+                triage.logs()
+            elif args.split()[0] == "run":
+                from framework.triage.triage import Triage
+                triage = Triage()
+                triage.run(args.split()[1], args.split()[2])
+        except ImportError:
+            raise
+        except IndexError:
+            logger.error("Not enough arguments (!)")
+            logger.error("Usage: triage logs")
+            logger.error("Usage: triage <log> <module>")
+
+
 
