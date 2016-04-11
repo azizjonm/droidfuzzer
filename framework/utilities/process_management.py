@@ -15,11 +15,12 @@ class ProcessManagement(object):
         for process in p:
             try:
                 parent = psutil.Process(process.pid)
-                for children in parent.children(recursive=True):
-                    children.kill()
-                parent.kill()
-            except psutil.NoSuchProcess as no_such_process:
-                raise no_such_process
+                if parent.is_running():
+                    for children in parent.children(recursive=True):
+                        children.kill()
+                    parent.kill()
+            except psutil.NoSuchProcess:
+                continue
             except psutil.Error as error:
                 raise error
         return

@@ -5,6 +5,7 @@ except ImportError as e:
     raise e
 
 from os import listdir, getcwd
+import sys
 
 
 class Tombstone(object):
@@ -22,25 +23,25 @@ class Tombstone(object):
         Recreate crash based off the crash log entries
         """
 
-        signal = "SIGSEGV"
-        density = 8
+        signal_type = "SIGSEGV"
         test_cases = list()
         test_case_paths = list()
 
         # We need to isolate the each test-case based on the signal type it triggered
         # Currently this will just be SIGSEGV
+        # https://github.com/fuzzing/MFFA/blob/master/get_uniquecrash.py
         try:
             with open(log, "r") as f:
                 lines = f.readlines()
                 for count in range(0, len(lines)):
-                    if signal in lines[count]:
-                        no_check = count - density
-                        if no_check < 0:
-                            diff = density - count
-                            no_check = density - diff
+                    if signal_type in lines[count]:
+                        check = count - 8
+                        if check < 0:
+                            diff = 8 - count
+                            check = 8 - diff
                         else:
-                            no_check = density
-                        for crash in range(1, no_check):
+                            check = 8
+                        for crash in range(1, check):
                             if "Filename" in lines[count - crash]:
                                 test_case = lines[count - crash].split(":")
                                 test_case = test_case[-1].rstrip("\n").rstrip("\r")

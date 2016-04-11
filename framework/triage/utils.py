@@ -22,6 +22,6 @@ class Utils(object):
         """
         try:
             # Requires root
-            Popen("".join([getcwd(), "/bin/adb shell su -c 'rm /tombstones/tombstone_00' "]), stdout=PIPE, shell=True)
+            Popen("".join([getcwd(), "/bin/adb shell su -c 'rm /tombstones/*' "]), stdout=PIPE, shell=True)
         except CalledProcessError as called_process_error:
             raise called_process_error

@@ -11,6 +11,7 @@ from blessings import Terminal
 from framework.utilities.process_management import ProcessManagement
 from framework.triage.utils import Utils
 import time
+import sys
 t = Terminal()
 
 
@@ -117,6 +118,7 @@ class DocumentViewerFuzzer(object):
                         # Kill all adb processes
                         #
                         ProcessManagement.kill(processes)
+                        sys.stdout.flush()
                     except CalledProcessError as called_process_error:
                         raise called_process_error
 
@@ -140,26 +142,32 @@ class DocumentViewerFuzzer(object):
                 # -----------------------------------------------------------------------------
                 pusher = Popen("".join([getcwd(), "/bin/adb push ",
                                         test_case,
-                                        " /sdcard/"]),
+                                        " /data/local/tmp"]),
                                stdout=PIPE,
                                shell=True)
-                processes.append(pusher)
-                time.sleep(2)
+                ret = pusher.wait()
+                if ret:
+                    processes.append(pusher)
+                time.sleep(3)
                 viewer = Popen(
                     "".join([getcwd(),
-                             "/bin/adb shell su -c 'am start -n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity -d file:///sdcard/{0}'"
-                            .format("".join(test_case.split("/")[-1]).rstrip("\r").rstrip("\n"))]),
+                             "/bin/adb shell su -c 'am start -n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity -d file:///data/local/tmp/{0}'"
+                            .format("".join(test_case.split("/")[-1]))]),
                     stdout=PIPE,
                     shell=True)
-                processes.append(viewer)
+                ret = viewer.wait()
+                if ret:
+                    processes.append(viewer)
                 time.sleep(1)
                 # Remove test-case from device
                 # ----------------------------------------------------------------------------------
                 remove = Popen(
-                    "".join([getcwd(), "/bin/adb shell rm /sdcard/{0}".format("".join(test_case.split("/")[-1]))]),
+                    "".join([getcwd(), "/bin/adb shell rm /data/local/tmp/{0}".format("".join(test_case.split("/")[-1]))]),
                     stdout=PIPE,
                     shell=True)
-                processes.append(remove)
+                ret = remove.wait()
+                if ret:
+                    processes.append(remove)
                 time.sleep(1)
                 # Kill target application process
                 # ------------------------------------------------------------------------------
