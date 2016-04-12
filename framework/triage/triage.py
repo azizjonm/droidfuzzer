@@ -5,7 +5,7 @@ try:
 except ImportError as e:
     raise e
 
-from os import walk, getcwd, path, listdir
+from os import walk, getcwd, listdir
 from framework.triage.tombstone import Tombstone, TombstoneCollector
 
 
