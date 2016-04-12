@@ -123,7 +123,7 @@ class DocumentViewerFuzzer(object):
                         raise called_process_error
 
     @staticmethod
-    def crash_triage(test_cases):
+    def trigger_unique_crash(test_cases):
         """
         Attempt to recreate crash based on target test-case
         """
@@ -135,6 +135,7 @@ class DocumentViewerFuzzer(object):
         Utils.clear_tombstones()
 
         # TODO - Figure out why /data/local/tmp doesn't work here
+        # TODO - Handle subprocess return codes
         for test_case in test_cases:
             logger.debug("Fuzzing : {0}".format("".join(test_case.split("/")[-1])))
             try:
@@ -179,4 +180,7 @@ class DocumentViewerFuzzer(object):
                 ProcessManagement.kill(processes)
             except CalledProcessError as called_process_error:
                 logger.error(called_process_error)
+                return False
+        # If everything succeeds return True
+        return True
 

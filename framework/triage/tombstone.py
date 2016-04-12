@@ -5,19 +5,18 @@ except ImportError as e:
     raise e
 
 from os import listdir, getcwd
-import sys
 
 
 class Tombstone(object):
 
     tombstone_location = None
+    tombstone = None
 
     def __init__(self):
         # This will need to dynamically change based on the device
-        # Samsung Core Prime for the time being
         self.tombstone = "/tombstone/tombstone_00"
 
-    def create_crash(self, log, module):
+    def generate_unique_crash(self, log, module):
 
         """
         Recreate crash based off the crash log entries
@@ -49,7 +48,7 @@ class Tombstone(object):
         except IOError:
             raise
 
-        # We need to remote all of the irrelevant test-cases
+        # We need to remove all of the irrelevant test-cases
         # TODO - Variable naming conventions should be less confusing
         for test_case_type in listdir("".join([getcwd(), "/test-cases"])):
             if test_case_type in test_cases[0].split(".")[1]:
@@ -58,22 +57,30 @@ class Tombstone(object):
                         if t in test_case:
                             test_case_path = "".join([getcwd(), "/test-cases/{0}/{1}".format(test_case_type, t)])
                             test_case_paths.append(test_case_path)
+        # Return a fuzzer from the factory based on the module
         try:
             from framework.modules.fuzzerfactory import FuzzerFactory
             factory_fuzzer = FuzzerFactory().get_fuzzer(module)
             if factory_fuzzer:
                 logger.debug("Loading : {0}".format(factory_fuzzer.tag))
-                factory_fuzzer.crash_triage(test_case_paths)
+                ret = factory_fuzzer.trigger_unique_crash(test_case_paths)
+                # If triggering and collecting unique crashes succeeds return True
+                if ret:
+                    return True
         except ImportError:
             raise
 
 
 class TombstoneCollector(Tombstone):
-    def __init__(self, log):
+    def __init__(self, log, module):
         super(Tombstone, self).__init__()
         self.log = log
+        self.module = module
 
     def collect(self):
+        """
+        Collect tombstone
+        """
         return
 
 

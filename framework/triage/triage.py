@@ -6,7 +6,7 @@ except ImportError as e:
     raise e
 
 from os import listdir, getcwd
-from framework.triage.tombstone import Tombstone
+from framework.triage.tombstone import Tombstone, TombstoneCollector
 
 
 class Triage(object):
@@ -40,4 +40,23 @@ class Triage(object):
         # We need to recreate the crash based on the crash log entries
         logger.debug("Triaging : {0}".format(log))
         tombstone = Tombstone()
-        tombstone.create_crash(path, module)
+        tombstone.generate_unique_crash(path, module)
+
+    def collect(self, log, module):
+        """
+        Collect tombstones from unique crash
+        """
+        path = None
+
+        try:
+            if log:
+                # Create the fully qualified path to the crash log
+                path = "".join([getcwd(), "/logs/{0}".format(log)])
+        except IOError:
+            raise
+
+        # We need to recreate the crash based on the crash log entries
+        logger.debug("Collecting : {0}".format(log))
+        collector = TombstoneCollector(path, module)
+        collector.collect()
+

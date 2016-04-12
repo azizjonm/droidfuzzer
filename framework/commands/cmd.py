@@ -21,6 +21,8 @@ class Run(DroidFuzzer):
     @staticmethod
     def do_fuzzers(args):
         """
+        Fuzz!
+
         Usage: fuzzer show
         Usage: fuzzer module <module>
         """
@@ -44,7 +46,7 @@ class Run(DroidFuzzer):
                                                                         "".join([module_name, " : ", fuzzer])))
                 elif args.split()[0] == "module":
                     if args.split()[1]:
-                        # Create a new FuzzerFactory
+                        # Create a new fuzzer from the factory
                         from framework.modules.fuzzerfactory import FuzzerFactory
                         _factory_fuzzer = FuzzerFactory().get_fuzzer(args.split()[1])
                         if _factory_fuzzer:
@@ -62,12 +64,16 @@ class Run(DroidFuzzer):
 
     @staticmethod
     def do_generate(args):
+        """
+        Generate Test-Cases
+        """
         try:
             if len(args) < 2:
                 logger.error("Not enough arguments (!)")
                 logger.error("Usage: generator <file> <number_of_test_cases>")
                 return
             else:
+                # Generate test-cases
                 from framework.generator.generator import Generator
                 g = Generator(args.split()[0], args.split()[1])
                 g.run()
@@ -76,15 +82,23 @@ class Run(DroidFuzzer):
 
     @staticmethod
     def do_triage(args):
+        """
+        Crash Triage
+        """
         try:
             if args.split()[0] == "logs":
+                # Produce available logs for crash triage
                 from framework.triage.triage import Triage
                 triage = Triage()
                 triage.logs()
             elif args.split()[0] == "run":
+                # Start crash triage
                 from framework.triage.triage import Triage
                 triage = Triage()
-                triage.run(args.split()[1], args.split()[2])
+                ret = triage.run(args.split()[1], args.split()[2])
+                # If triage return successfully begin tombstone collection
+                if ret:
+                    triage.collect(args.split()[1], args.split()[2])
         except ImportError:
             raise
         except IndexError:
