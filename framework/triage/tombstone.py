@@ -50,6 +50,7 @@ class Tombstone(object):
 
         # We need to remove all of the irrelevant test-cases
         # TODO - Variable naming conventions should be less confusing
+        test_cases = list(set(test_cases))
         for test_case_type in listdir("".join([getcwd(), "/test-cases"])):
             if test_case_type in test_cases[0].split(".")[1]:
                 for t in listdir("".join([getcwd(), "/test-cases/{0}".format(test_case_type)])):

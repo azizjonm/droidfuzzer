@@ -64,7 +64,6 @@ class DocumentViewerFuzzer(object):
                         pusher = Popen("".join([getcwd(), "/bin/adb push ",
                                                 "{0}/test-cases/{1}/{2}".format(getcwd(), target, item),
                                                 " /data/local/tmp"]),
-                                       stdout=PIPE,
                                        shell=True)
                         processes.append(pusher)
                         time.sleep(2)
@@ -72,7 +71,6 @@ class DocumentViewerFuzzer(object):
                             "".join([getcwd(), "/bin/adb shell su '-c am start ",
                                      "-n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity ",
                                      "-d file:///data/local/tmp/{0}'".format(item)]),
-                            stdout=PIPE,
                             shell=True)
                         processes.append(viewer)
                         time.sleep(1)
@@ -80,25 +78,24 @@ class DocumentViewerFuzzer(object):
                         # -------------------------------------------------------------------------------
                         log = Popen(
                             "".join([getcwd(), "/bin/adb shell log -p v -t 'Filename' {0}".format(item)]),
-                            stdout=PIPE,
                             shell=True)
+
                         processes.append(log)
                         time.sleep(1)
                         # Find and write fatal log entries (SIGSEGV)
                         # ----------------------------------------------------------------------------------------
                         fatal = Popen(
                             "".join([getcwd(), "/bin/adb logcat -v time *:F > ",
-                                               "logs/samsung_core_prime_document_viewer_{0}_logs".format(target)]),
-                            stdout=PIPE,
+                                               "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_logs".format(target, item)]),
                             shell=True)
+
                         processes.append(fatal)
                         time.sleep(1)
                         # Find and write test-case entry logs
                         # ----------------------------------------------------------------------------------------
                         logcat = Popen(
-                            "".join([getcwd(), "/bin/adb logcat -v time *:F -s 'Filename' >> ",
-                                               "logs/samsung_core_prime_document_viewer_{0}_logs".format(target)]),
-                            stdout=PIPE,
+                            "".join([getcwd(), "/bin/adb logcat -v time *:F -s 'Filename' > ",
+                                               "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_logs".format(target, item)]),
                             shell=True)
                         processes.append(logcat)
                         time.sleep(1)
@@ -106,10 +103,11 @@ class DocumentViewerFuzzer(object):
                         # ----------------------------------------------------------------------------------
                         remove = Popen(
                             "".join([getcwd(), "/bin/adb shell su '-c rm /data/local/tmp/{0}'".format(item)]),
-                            stdout=PIPE,
                             shell=True)
-                        processes.append(remove)
-                        time.sleep(1)
+                        ret = remove.wait()
+                        if ret:
+                            processes.append(remove)
+                            time.sleep(1)
                         # Kill target application process
                         # ------------------------------------------------------------------------------
                         Popen(
@@ -118,7 +116,7 @@ class DocumentViewerFuzzer(object):
                         # Kill all adb processes
                         #
                         ProcessManagement.kill(processes)
-                        sys.stdout.flush()
+                        ProcessManagement.clear()
                     except CalledProcessError as called_process_error:
                         raise called_process_error
 

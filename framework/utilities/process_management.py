@@ -32,6 +32,8 @@ class ProcessManagement(object):
         :return:
         """
         p = Popen("".join([getcwd(), "/bin/adb logcat -c"]), shell=True)
-        psutil.Process(p.pid).kill()
+        ret = p.wait()
+        if ret:
+            psutil.Process(p.pid).kill()
 
 

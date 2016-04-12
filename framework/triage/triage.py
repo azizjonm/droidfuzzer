@@ -5,7 +5,7 @@ try:
 except ImportError as e:
     raise e
 
-from os import listdir, getcwd
+from os import walk, getcwd, path, listdir
 from framework.triage.tombstone import Tombstone, TombstoneCollector
 
 
@@ -18,11 +18,22 @@ class Triage(object):
         Return available crash logs for triage
         """
 
+        # This is tight and clean as fuck (!)
         try:
-            for log in listdir("".join([getcwd(), "/logs"])):
-                logger.debug("Available Logs : {0} ".format(log))
+            for root in listdir("".join([getcwd(), "/logs"])):
+                module = (next(walk("".join([getcwd(), "/logs/{0}".format(root)]))))
+                if module:
+                    types = (next(walk("".join([getcwd(), "/logs/{0}/{1}".format(root, module[1][0])]))))
+                    if types:
+                        for t in types[1]:
+                            logger.debug("Available Logs : {0}".format("".join(["/",
+                                                                                module[0].split("/")[-1],
+                                                                                "/",
+                                                                                module[1][0],
+                                                                                "/",
+                                                                                t])))
         except IOError:
-            logger.error("Can't open the log directory (!)")
+            logger.error("Logs Unavailable (!)")
 
     def run(self, log, module):
         """
