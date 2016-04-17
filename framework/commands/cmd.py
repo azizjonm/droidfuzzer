@@ -70,7 +70,7 @@ class Run(DroidFuzzer):
         try:
             if len(args) < 2:
                 logger.error("Not enough arguments (!)")
-                logger.error("Usage: generator <file> <number_of_test_cases>")
+                logger.error("Usage: generator <sample> <number_of_test_cases>")
                 return
             else:
                 # Generate test-cases

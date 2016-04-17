@@ -4,14 +4,13 @@ try:
     logger = logging.getLogger('DroidFuzzer')
 except ImportError as e:
     raise e
-from os import listdir, getcwd, path
-import os
+from os import listdir, getcwd
+from random import randint, sample
 from subprocess import Popen, PIPE, CalledProcessError
 from blessings import Terminal
 from framework.utilities.process_management import ProcessManagement
 from framework.triage.utils import Utils
 import time
-import sys
 t = Terminal()
 
 
@@ -39,7 +38,7 @@ class DocumentViewerFuzzer(object):
             logger.debug("Available Test-Case : {0}".format(test_case))
 
         # Get target test-case
-        target = raw_input(t.yellow("(DroidFuzzer) Select Test-Case: "))
+        target = raw_input(t.yellow("(DroidFuzzer) Select" + t.white(" Test-Case: ")))
 
         # Clear logcat before running test-cases
         ProcessManagement.clear()
@@ -48,75 +47,71 @@ class DocumentViewerFuzzer(object):
         # Clear existing tombstones
         Utils.clear_tombstones()
 
-        # Clear existing logs
-        if path.isfile("".join([getcwd(), "/logs/samsung_core_prime_document_viewer_{0}_logs".format(target)])):
-            logger.debug("Removing existing logs (!)")
-            # Got an unresolved reference when just importing the function (?)
-            os.remove("".join([getcwd(), "/logs/samsung_core_prime_document_viewer_{0}_logs".format(target)]))
-
         for test_case in _test_cases:
+            log_id = randint(0, 10000)
             if target == test_case:
-                for item in listdir("".join([getcwd(), "/test-cases/{0}".format(target)])):
+                # Always return a random sample of the generate test-cases
+                for item in sample(listdir("".join([getcwd(), "/test-cases/{0}".format(target)])),
+                                   len(listdir("".join([getcwd(), "/test-cases/{0}".format(target)])))):
+
                     logger.debug("Fuzzing : {0}".format(item))
+
                     try:
-                        # Push the test-case to the device
-                        # -----------------------------------------------------------------------------
-                        pusher = Popen("".join([getcwd(), "/bin/adb push ",
-                                                "{0}/test-cases/{1}/{2}".format(getcwd(), target, item),
-                                                " /data/local/tmp"]),
-                                       shell=True)
+                        # Push the selected test-case on to the device
+                        pusher = ProcessManagement.execute("".join([getcwd(),
+                                                                    "/bin/adb push ",
+                                                                    "{0}/test-cases/{1}/{2}".format(getcwd(),
+                                                                                                    target, item)," /data/local/tmp"]))
                         processes.append(pusher)
-                        time.sleep(2)
-                        viewer = Popen(
-                            "".join([getcwd(), "/bin/adb shell su '-c am start ",
-                                     "-n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity ",
-                                     "-d file:///data/local/tmp/{0}'".format(item)]),
-                            shell=True)
+                        time.sleep(5)
+                        # Execute the target parser
+                        viewer = ProcessManagement.execute("".join([getcwd(),
+                                                                    "/bin/adb shell su '-c am start ",
+                                                                    "-n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity ",
+                                                                    "-d file:///data/local/tmp/{0}'".format(item)]))
                         processes.append(viewer)
-                        time.sleep(1)
-                        # Add each test-case as a log entry
-                        # -------------------------------------------------------------------------------
-                        log = Popen(
-                            "".join([getcwd(), "/bin/adb shell log -p v -t 'Filename' {0}".format(item)]),
-                            shell=True)
+                        time.sleep(10)
+                        # Log the test-case
+                        log = ProcessManagement.execute(
+                            "".join([getcwd(),
+                                     "/bin/adb shell log -p v -t 'Filename' {0}".format(item)]))
 
                         processes.append(log)
-                        time.sleep(1)
-                        # Find and write fatal log entries (SIGSEGV)
-                        # ----------------------------------------------------------------------------------------
-                        fatal = Popen(
-                            "".join([getcwd(), "/bin/adb logcat -v time *:F > ",
-                                               "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_logs".format(target, item)]),
-                            shell=True)
+                        time.sleep(3)
+                        # Log any SIGSEGV
+                        fatal = ProcessManagement.execute(
+                            "".join([getcwd(),
+                                     "/bin/adb logcat -v time *:F > ",
+                                     "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_{2}_logs"
+                                    .format(target, item, log_id)]))
 
                         processes.append(fatal)
-                        time.sleep(1)
-                        # Find and write test-case entry logs
-                        # ----------------------------------------------------------------------------------------
-                        logcat = Popen(
-                            "".join([getcwd(), "/bin/adb logcat -v time *:F -s 'Filename' > ",
-                                               "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_logs".format(target, item)]),
-                            shell=True)
+                        time.sleep(3)
+                        # Log the test-case that triggered the SIGSEGV
+                        logcat = ProcessManagement.execute(
+                            "".join([getcwd(),
+                                     "/bin/adb logcat -v time *:F -s 'Filename' > ",
+                                     "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_{2}_logs"
+                                    .format(target, item, log_id)]))
+
                         processes.append(logcat)
-                        time.sleep(1)
-                        # Remove test-case from device
-                        # ----------------------------------------------------------------------------------
-                        remove = Popen(
-                            "".join([getcwd(), "/bin/adb shell su '-c rm /data/local/tmp/{0}'".format(item)]),
-                            shell=True)
+                        time.sleep(3)
+                        # Remove the selected test-case
+                        remove = ProcessManagement.execute(
+                            "".join([getcwd(), "/bin/adb shell su '-c rm /data/local/tmp/{0}'".format(item)]))
+
                         ret = remove.wait()
+                        # Make sure we have received a return code before proceeding
                         if ret:
                             processes.append(remove)
-                            time.sleep(1)
-                        # Kill target application process
-                        # ------------------------------------------------------------------------------
-                        Popen(
-                            "".join([getcwd(), "/bin/adb shell am force-stop com.hancom.office.viewer"]),
-                            shell=True)
-                        # Kill all adb processes
-                        #
+                            time.sleep(3)
+                        # Kill the target parser
+                        ProcessManagement.execute(
+                            "".join([getcwd(), "/bin/adb shell am force-stop com.hancom.office.viewer"]))
+                        # Recursively kill all child processes
                         ProcessManagement.kill(processes)
                         ProcessManagement.clear()
+
                     except CalledProcessError as called_process_error:
                         raise called_process_error
 
@@ -179,6 +174,10 @@ class DocumentViewerFuzzer(object):
             except CalledProcessError as called_process_error:
                 logger.error(called_process_error)
                 return False
+            except Exception as e:
+                # Handle this ...
+                if e.message == "[Errno 35] Resource temporarily unavailable":
+                    logger.error(e.message)
         # If everything succeeds return True
         return True
 

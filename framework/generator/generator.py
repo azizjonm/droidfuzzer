@@ -4,17 +4,17 @@ try:
     logger = logging.getLogger('DroidFuzzer')
 except ImportError as e:
     raise e
-from os import path, getcwd, makedirs, error
-from subprocess import Popen, CalledProcessError
+from os import path, getcwd, makedirs, listdir
+from subprocess import Popen, CalledProcessError, PIPE
 from blessings import Terminal
 t = Terminal()
 
 
 class Generator(object):
 
-    def __init__(self, file_path, number):
+    def __init__(self, sample, number):
         super(Generator, self).__init__()
-        self.file_path = file_path
+        self.sample = sample
         self.number = number
 
     def run(self):
@@ -22,28 +22,26 @@ class Generator(object):
         Generate test-cases
         :return:
         """
-        # Get the file extension from the file path
-        ext = path.splitext(self.file_path)[1]
 
-        if path.exists("".join([getcwd(), "/test-cases/{0}".format(ext.strip("."))])):
-            logger.debug("Extension already exists (!)")
-            logger.debug("Generating Test-Cases (!)")
-        else:
-            # Create a directory for the extension if it doesn't already exist
-            logger.debug("Creating directory for the {0} extension (!)".format(ext))
-            try:
-                makedirs("".join([getcwd(), "/test-cases/{0}".format(ext.strip("."))]))
-            except error:
-                raise
-        try:
-            # TODO - Provide more control over radamsa usage
-            Popen(
-                "".join([
-                    getcwd(),
-                    "/bin/radamsa -p od -m ft=2,fo=2,fn,num=3,td,tr2,ts1 -v -n {0} -o {1} {2}"
-                        .format(self.number,
-                                "".join([getcwd(), "/test-cases/{0}/test-case-%n.{0}".format(ext.strip("."))]),
-                                self.file_path)]), shell=True).wait()
-        except CalledProcessError:
-            raise
-
+        for s in listdir("".join([getcwd(), "/samples/"])):
+            if self.sample == s.split(".")[1]:
+                try:
+                    logger.debug("Generating Test-Cases from Sample : {0}".format(self.sample))
+                    if path.exists("".join([getcwd(), "/test-cases/{0}".format(self.sample)])):
+                        logger.debug("Already generated Test-Cases from Sample : {0}".format(self.sample))
+                    else:
+                        makedirs("".join([getcwd(), "/test-cases/{0}".format(self.sample)]))
+                    # TODO - Provide more control over radamsa usage
+                    # TODO - Handle specific mutation control for different file formats
+                    Popen(
+                        "".join([
+                            getcwd(),
+                            "/bin/radamsa -p nd -m ft=2,fo=2,xp,ab -v -n {0} -o {1} {2}"
+                                .format(self.number,
+                                        "".join([getcwd(),
+                                                 "/test-cases/{0}/test-case-%n.{0}".format(self.sample)]),
+                                        "".join([getcwd(), "/samples/", s]))]), stdout=PIPE, shell=True).wait()
+                except CalledProcessError:
+                    raise
+                except IOError:
+                    raise

@@ -1,4 +1,4 @@
-from subprocess import Popen
+from subprocess import Popen, PIPE
 import psutil
 from os import getcwd
 
@@ -35,5 +35,14 @@ class ProcessManagement(object):
         ret = p.wait()
         if ret:
             psutil.Process(p.pid).kill()
+
+    @staticmethod
+    def execute(cmd):
+        """
+        Execute command and return process
+        """
+        p = Popen(cmd, stdout=PIPE, shell=True)
+        return p
+
 
 
