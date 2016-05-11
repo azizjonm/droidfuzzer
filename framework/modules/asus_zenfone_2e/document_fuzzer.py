@@ -15,22 +15,24 @@ import time
 t = Terminal()
 
 
-class ThinkfreeDocumentFuzzer(object):
+class ASUSZenFoneDocumentFuzzer(object):
 
-    label = "thinkfree_document_fuzzer"
-    tag = "Thinkfree Document Fuzzer"
+    label = "asus_zenfone_2e_document_fuzzer"
+    tag = "ASUS ZenFone 2E Document Fuzzer"
 
     @staticmethod
     def run():
         """
         Run gallery fuzzer
         """
-        logger.debug("Starting Thinkfree Document Fuzzer (!)")
+        logger.debug("Starting ASUS ZenFone 2E Document Fuzzer (!)")
 
         _test_cases = [
 
+            "pdf",
             "doc",
-            "docx"
+            "docx",
+            "xls"
         ]
 
         for test_case in _test_cases:
@@ -59,17 +61,15 @@ class ThinkfreeDocumentFuzzer(object):
                         pusher = Popen("".join([getcwd(), "/bin/adb push ",
                                                 "{0}/test-cases/{1}/{2}".format(getcwd(), target, item),
                                                 " /sdcard/"]),
-                                       stdout=PIPE,
                                        shell=True)
                         processes.append(pusher)
                         time.sleep(2)
                         viewer = Popen(
-                            "".join([getcwd(), "/bin/adb shell am start ",
-                                     "-n com.tf.thinkdroid.amlite/com.tf.thinkdroid.write.viewer.HdWriteViewerActivity ",
-                                     "-t application/vnd.openxmlformats-officedocument.wordprocessingml.document "
+                            "".join([getcwd(), "/bin/adb shell su -c 'am start ",
+                                     "-n com.tf.thinkdroid.asus/com.tf.thinkdroid.pdf.app.StartTfpActivity ",
+                                     "-t application/{0} ".format(target),
                                      "-a android.intent.action.VIEW ",
-                                     "-d file:///sdcard/{0}".format(item)]),
-                            stdout=PIPE,
+                                     "-d file:///sdcard/{0}'".format(item)]),
                             shell=True)
                         processes.append(viewer)
                         time.sleep(1)
@@ -77,7 +77,6 @@ class ThinkfreeDocumentFuzzer(object):
                         # -------------------------------------------------------------------------------
                         log = Popen(
                             "".join([getcwd(), "/bin/adb shell log -p v -t 'Filename' {0}".format(item)]),
-                            stdout=PIPE,
                             shell=True)
 
                         processes.append(log)
@@ -87,9 +86,8 @@ class ThinkfreeDocumentFuzzer(object):
                         fatal = Popen(
                             "".join([getcwd(),
                                      "/bin/adb logcat -v time *:F > ", getcwd(),
-                                     "/logs/thinkfree/document/{0}/thinkfree_document_{0}_{1}_{2}_logs"
+                                     "/logs/asus_zenfone_2e/document/{0}/asus_zenfone_2e_document_{0}_{1}_{2}_logs"
                                     .format(target, item, log_id)]),
-                            stdout=PIPE,
                             shell=True)
 
                         processes.append(fatal)
@@ -99,9 +97,8 @@ class ThinkfreeDocumentFuzzer(object):
                         logcat = Popen(
                             "".join([getcwd(),
                                      "/bin/adb logcat -v time *:F -s 'Filename' > ", getcwd(),
-                                     "/logs/thinkfree/document/{0}/thinkfree_document_{0}_{1}_{2}_logs"
+                                     "/logs/asus_zenfone_2e/document/{0}/asus_zenfone_2e_document_{0}_{1}_{2}_logs"
                                     .format(target, item, log_id)]),
-                            stdout=PIPE,
                             shell=True)
 
                         processes.append(logcat)
@@ -110,7 +107,6 @@ class ThinkfreeDocumentFuzzer(object):
                         # ----------------------------------------------------------------------------------
                         remove = Popen(
                             "".join([getcwd(), "/bin/adb shell rm /sdcard/{0}".format(item)]),
-                            stdout=PIPE,
                             shell=True)
                         ret = remove.wait()
                         if ret:
@@ -119,8 +115,7 @@ class ThinkfreeDocumentFuzzer(object):
                         # Kill target application process
                         # ------------------------------------------------------------------------------
                         Popen(
-                            "".join([getcwd(), "/bin/adb shell am force-stop com.tf.thinkdroid.amlite"]),
-                            stdout=PIPE,
+                            "".join([getcwd(), "/bin/adb shell am force-stop com.tf.thinkdroid.asus"]),
                             shell=True)
                         # Kill all adb processes
                         ProcessManagement.kill(processes)

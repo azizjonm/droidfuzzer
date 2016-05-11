@@ -14,10 +14,10 @@ import time
 t = Terminal()
 
 
-class DocumentViewerFuzzer(object):
+class PolarisOfficeFuzzer(object):
 
-    label = "samsung_core_prime_document_viewer_fuzzer"
-    tag = "Samsung Core Prime Document Viewer Fuzzer"
+    label = "lg_gpad_7_polaris_office_fuzzer"
+    tag = "LG GPad 7 Polaris Office Fuzzer"
 
     @staticmethod
     def run():
@@ -25,13 +25,14 @@ class DocumentViewerFuzzer(object):
         Run target fuzzer
         :return:
         """
-        logger.debug("Starting Samsung Core Prime Document Viewer Fuzzer (!)")
+        logger.debug("Starting LG GPad 7 Polaris Office Fuzzer (!)")
 
         _test_cases = [
 
             "docx",
             "doc",
-            "pdf"
+            "pdf",
+            "ppt"
         ]
 
         for test_case in _test_cases:
@@ -61,14 +62,14 @@ class DocumentViewerFuzzer(object):
                         pusher = ProcessManagement.execute("".join([getcwd(),
                                                                     "/bin/adb push ",
                                                                     "{0}/test-cases/{1}/{2}".format(getcwd(),
-                                                                                                    target, item)," /data/local/tmp"]))
+                                                                                                    target, item)," /sdcard/"]))
                         processes.append(pusher)
                         time.sleep(5)
                         # Execute the target parser
                         viewer = ProcessManagement.execute("".join([getcwd(),
                                                                     "/bin/adb shell su '-c am start ",
-                                                                    "-n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity ",
-                                                                    "-d file:///data/local/tmp/{0}'".format(item)]))
+                                                                    "-n com.infraware.polarisoffice5tablet/com.infraware.filemanager.FmLauncherActivity ",
+                                                                    "-d file:///storage/emulated/0/{0}'".format(item)]))
                         processes.append(viewer)
                         time.sleep(10)
                         # Log the test-case
@@ -82,7 +83,7 @@ class DocumentViewerFuzzer(object):
                         fatal = ProcessManagement.execute(
                             "".join([getcwd(),
                                      "/bin/adb logcat -v time *:F > ",
-                                     "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_{2}_logs"
+                                     "logs/lg_gpad_7/polaris_office/{0}/lg_gpad_7_polaris_office_{1}_{2}_logs"
                                     .format(target, item, log_id)]))
 
                         processes.append(fatal)
@@ -91,14 +92,14 @@ class DocumentViewerFuzzer(object):
                         logcat = ProcessManagement.execute(
                             "".join([getcwd(),
                                      "/bin/adb logcat -v time *:F -s 'Filename' > ",
-                                     "logs/samsung_core_prime/document_viewer/{0}/samsung_core_prime_document_viewer_{1}_{2}_logs"
+                                     "logs/lg_gpad_7/polaris_office/{0}/lg_gpad_7_polaris_office_{1}_{2}_logs"
                                     .format(target, item, log_id)]))
 
                         processes.append(logcat)
                         time.sleep(3)
                         # Remove the selected test-case
                         remove = ProcessManagement.execute(
-                            "".join([getcwd(), "/bin/adb shell su '-c rm /data/local/tmp/{0}'".format(item)]))
+                            "".join([getcwd(), "/bin/adb shell su '-c rm /sdcard/{0}'".format(item)]))
 
                         ret = remove.wait()
                         # Make sure we have received a return code before proceeding
@@ -107,7 +108,7 @@ class DocumentViewerFuzzer(object):
                             time.sleep(3)
                         # Kill the target parser
                         ProcessManagement.execute(
-                            "".join([getcwd(), "/bin/adb shell am force-stop com.hancom.office.viewer"]))
+                            "".join([getcwd(), "/bin/adb shell am force-stop com.infraware.polarisoffice5tablet"]))
                         # Recursively kill all child processes
                         ProcessManagement.kill(processes)
                         ProcessManagement.clear()
@@ -118,70 +119,3 @@ class DocumentViewerFuzzer(object):
                         # Handle this ...
                         if e.message == "[Errno 35] Resource temporarily unavailable":
                             logger.error(e.message)
-
-    @staticmethod
-    def trigger_unique_crash(test_cases):
-        """
-        Attempt to recreate crash based on target test-case
-        """
-        # Clear logcat before running test-cases
-        ProcessManagement.clear()
-        processes = list()
-
-        # Clear existing tombstones
-        Utils.clear_tombstones()
-
-        # TODO - Figure out why /data/local/tmp doesn't work here
-        # TODO - Handle subprocess return codes
-        for test_case in test_cases:
-            logger.debug("Fuzzing : {0}".format("".join(test_case.split("/")[-1])))
-            try:
-                # Push the test-case to the device
-                # -----------------------------------------------------------------------------
-                pusher = Popen("".join([getcwd(), "/bin/adb push ",
-                                        test_case,
-                                        " /data/local/tmp"]),
-                               stdout=PIPE,
-                               shell=True)
-                ret = pusher.wait()
-                if ret:
-                    processes.append(pusher)
-                time.sleep(3)
-                viewer = Popen(
-                    "".join([getcwd(),
-                             "/bin/adb shell su -c 'am start -n com.hancom.office.viewer/com.tf.thinkdroid.write.ni.viewer.WriteViewPlusActivity -d file:///data/local/tmp/{0}'"
-                            .format("".join(test_case.split("/")[-1]))]),
-                    stdout=PIPE,
-                    shell=True)
-                ret = viewer.wait()
-                if ret:
-                    processes.append(viewer)
-                time.sleep(1)
-                # Remove test-case from device
-                # ----------------------------------------------------------------------------------
-                remove = Popen(
-                    "".join([getcwd(), "/bin/adb shell rm /data/local/tmp/{0}".format("".join(test_case.split("/")[-1]))]),
-                    stdout=PIPE,
-                    shell=True)
-                ret = remove.wait()
-                if ret:
-                    processes.append(remove)
-                time.sleep(1)
-                # Kill target application process
-                # ------------------------------------------------------------------------------
-                Popen(
-                    "".join([getcwd(), "/bin/adb shell am force-stop com.hancom.office.viewer"]),
-                    shell=True)
-                # Kill all adb processes
-                # ------------------------------------------------------------------------------
-                ProcessManagement.kill(processes)
-            except CalledProcessError as called_process_error:
-                logger.error(called_process_error)
-                return False
-            except Exception as e:
-                # Handle this ...
-                if e.message == "[Errno 35] Resource temporarily unavailable":
-                    logger.error(e.message)
-        # If everything succeeds return True
-        return True
-

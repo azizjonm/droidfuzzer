@@ -25,6 +25,7 @@ class Generator(object):
 
         for s in listdir("".join([getcwd(), "/samples/"])):
             if self.sample == s.split(".")[1]:
+                print(s.split(".")[1])
                 try:
                     logger.debug("Generating Test-Cases from Sample : {0}".format(self.sample))
                     if path.exists("".join([getcwd(), "/test-cases/{0}".format(self.sample)])):
@@ -36,7 +37,7 @@ class Generator(object):
                     Popen(
                         "".join([
                             getcwd(),
-                            "/bin/radamsa -p nd -m ft=2,fo=2,xp,ab -v -n {0} -o {1} {2}"
+                            "/bin/radamsa -v -n {0} -o {1} {2}"
                                 .format(self.number,
                                         "".join([getcwd(),
                                                  "/test-cases/{0}/test-case-%n.{0}".format(self.sample)]),

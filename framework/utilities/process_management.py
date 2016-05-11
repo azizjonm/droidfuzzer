@@ -8,9 +8,7 @@ class ProcessManagement(object):
     @staticmethod
     def kill(p):
         """
-        Kill all processes within process group
-        :param p
-        :return:
+        Recursively kill all child processes for a given parent process
         """
         for process in p:
             try:
@@ -28,8 +26,7 @@ class ProcessManagement(object):
     @staticmethod
     def clear():
         """
-        Clear logcat logs
-        :return:
+        Clear logs and kill the logcat process
         """
         p = Popen("".join([getcwd(), "/bin/adb logcat -c"]), shell=True)
         ret = p.wait()
@@ -39,9 +36,11 @@ class ProcessManagement(object):
     @staticmethod
     def execute(cmd):
         """
-        Execute command and return process
+        Execute command and return the process
         """
-        p = Popen(cmd, stdout=PIPE, shell=True)
+        # https://docs.python.org/3/library/subprocess.html
+        # It is import to use close_fds or you will routinely run into the "[Errno 24] Too many open files" error
+        p = Popen(cmd, stdout=PIPE, shell=True, close_fds=True)
         return p
 
 

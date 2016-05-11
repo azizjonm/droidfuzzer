@@ -29,7 +29,8 @@ class ASUSZenFoneVideoFuzzer(object):
 
         _test_cases = [
 
-            "mp4"
+            "mp4",
+            "mkv"
         ]
 
         for test_case in _test_cases:
@@ -45,16 +46,14 @@ class ASUSZenFoneVideoFuzzer(object):
         # Clear existing tombstones
         Utils.clear_tombstones()
 
-        for test_case in shuffle(_test_cases):
-
+        for test_case in _test_cases:
+            # Create random log identifier
             log_id = randint(0, 10000)
-
             if target == test_case:
                 for item in listdir("".join([getcwd(), "/test-cases/{0}".format(target)])):
                     logger.debug("Fuzzing : {0}".format(item))
                     try:
                         # Push the test-case to the device
-                        # -----------------------------------------------------------------------------
                         pusher = Popen("".join([getcwd(), "/bin/adb push ",
                                                 "{0}/test-cases/{1}/{2}".format(getcwd(), target, item),
                                                 " /sdcard/"]),
@@ -72,7 +71,6 @@ class ASUSZenFoneVideoFuzzer(object):
                         processes.append(viewer)
                         time.sleep(1)
                         # Add each test-case as a log entry
-                        # -------------------------------------------------------------------------------
                         log = Popen(
                             "".join([getcwd(), "/bin/adb shell log -p v -t 'Filename' {0}".format(item)]),
                             shell=True)
@@ -80,7 +78,6 @@ class ASUSZenFoneVideoFuzzer(object):
                         processes.append(log)
                         time.sleep(1)
                         # Find and write fatal log entries (SIGSEGV)
-                        # ----------------------------------------------------------------------------------------
                         fatal = Popen(
                             "".join([getcwd(),
                                      "/bin/adb logcat -v time *:F > ", getcwd(),
@@ -91,7 +88,6 @@ class ASUSZenFoneVideoFuzzer(object):
                         processes.append(fatal)
                         time.sleep(1)
                         # Find and write test-case entry logs
-                        # ----------------------------------------------------------------------------------------
                         logcat = Popen(
                             "".join([getcwd(),
                                      "/bin/adb logcat -v time *:F -s 'Filename' > ", getcwd(),
@@ -102,7 +98,6 @@ class ASUSZenFoneVideoFuzzer(object):
                         processes.append(logcat)
                         time.sleep(1)
                         # Remove test-case from device
-                        # ----------------------------------------------------------------------------------
                         remove = Popen(
                             "".join([getcwd(), "/bin/adb shell rm /sdcard/{0}".format(item)]),
                             shell=True)
@@ -111,7 +106,6 @@ class ASUSZenFoneVideoFuzzer(object):
                             processes.append(remove)
                             time.sleep(1)
                         # Kill target application process
-                        # ------------------------------------------------------------------------------
                         Popen(
                             "".join([getcwd(), "/bin/adb shell am force-stop com.asus.gallery"]),
                             shell=True)
